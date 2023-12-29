@@ -5,6 +5,7 @@ plugins {
 
 dependencies {
     implementation(project(":robocode.api"))
+    implementation("org.jeasy:easy-rules-core:4.0.0")
 }
 
 description = "Robocode Samples"
