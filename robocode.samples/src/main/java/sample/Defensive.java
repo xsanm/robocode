@@ -23,7 +23,7 @@ import java.awt.*;
 /**
  * DefensiveKamil - runs away, wins when other robots have no energy
  */
-public class DefensiveKamil extends Robot {
+public class Defensive extends Robot {
 
     Facts spottedFacts = new Facts();
     Facts wallFacts = new Facts();

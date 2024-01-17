@@ -8,39 +8,57 @@
 package sample;
 
 
-import org.jeasy.rules.api.Facts;
-import org.jeasy.rules.api.Rule;
+import org.jeasy.rules.api.*;
 import org.jeasy.rules.api.Rules;
-import org.jeasy.rules.api.RulesEngine;
 import org.jeasy.rules.core.DefaultRulesEngine;
 import org.jeasy.rules.core.RuleBuilder;
 import robocode.*;
 
 import java.awt.geom.Point2D;
-import java.util.Random;
 
-import java.awt.*;
-
-public class AdiNormalnie extends AdvancedRobot {
-    private Random rand = new Random();
+public class Offensive extends AdvancedRobot {
     Rules rules = new Rules();
-    Rule weatherRule = new RuleBuilder()
-            .name("weather rule")
-            .description("if it rains then take an umbrella")
-            .when(facts -> facts.get("rain1").equals(true))
-            .then(facts -> System.out.println("It rains, take an umbrella XDDDDD!"))
+    Facts fireFacts = new Facts();
+    Facts movementFacts = new Facts();
+    Facts movementFacts2 = new Facts();
+
+
+    Rule fireRule = new RuleBuilder()
+            .name("fire")
+            .description("fire a shot if you are in position")
+            .when(facts -> facts.get("fire").equals(true))
+            .then(facts -> {
+                ScannedRobotEvent event = facts.get("event");
+                this.predict_shot(3.0, event);
+            })
             .build();
 
-    Rule weatherRule2 = new RuleBuilder()
-            .name("weather rule2")
-            .description("if it rains then take an umbrella")
-            .when(facts -> facts.get("rain2").equals("ddd"))
-            .then(facts -> System.out.println("WHAt WHAT"))
+    Rule movementRule = new RuleBuilder()
+            .name("movement")
+            .description("setBack")
+            .when(facts -> facts.get("setBack").equals(true))
+            .then(facts -> {
+                double distance = facts.get("distance");
+                setBack(distance);
+            })
             .build();
+
+    Rule movementRule2 = new RuleBuilder()
+            .name("movement2")
+            .description("setAhead")
+            .when(facts -> facts.get("setAhead").equals(true))
+            .then(facts -> {
+                double distance = facts.get("distance");
+                setAhead(distance);
+            }).build();
+
 
     RulesEngine rulesEngine = new DefaultRulesEngine();
 
     public void run() {
+        rules.register(fireRule);
+        rules.register(movementRule);
+        rules.register(movementRule2);
         setAdjustRadarForGunTurn(true);
         setAdjustGunForRobotTurn(true);
         setTurnRadarRight(1000); // initial scan
@@ -56,7 +74,6 @@ public class AdiNormalnie extends AdvancedRobot {
 
     public void onScannedRobot(ScannedRobotEvent e) {
         // turn toward the robot we scanned
-
         setTurnRight(normalizeBearing(e.getBearing()));
 
         // normalize the turn to take the shortest path there
@@ -66,25 +83,28 @@ public class AdiNormalnie extends AdvancedRobot {
         // if we've turned toward our enemy...
         if (Math.abs(getTurnRemaining()) < 10) {
             if (e.getDistance() > 300) {
-                setAhead(e.getDistance() / 2);
+                movementFacts2.put("setAhead", true);
+                movementFacts2.put("distance", e.getDistance() / 2);
+                rulesEngine.fire(rules, movementFacts2);
+//                setAhead(e.getDistance() / 2);
                 setMovement = true;
             } else if (e.getDistance() < 100) {
-                setBack(e.getDistance() * 2);
+                movementFacts.put("setBack", true);
+                movementFacts.put("distance", e.getDistance() * 2);
+                rulesEngine.fire(rules, movementFacts);
+//                setBack(e.getDistance() * 2);
             }
-            predict_shot(3.0, e);
+            fireFacts.put("event", e);
+            fireFacts.put("fire", true);
+            rulesEngine.fire(rules, fireFacts);
+//            this.predict_shot(3.0, e);
             execute();
-//            if(!setMovement) {
-//                if(rand.nextDouble() < 0.5) {
-//                    setAhead(e.getDistance() / 2);
-//                } else {
-//                    setBack(e.getDistance() * 2);
-//                }
-//            }
         }
-
         // lock our radar onto our target
         setTurnRadarRight(getHeading() - getRadarHeading() + e.getBearing());
+
     }
+
 
     // normalizes a bearing to between +180 and -180
     double normalizeBearing(double angle) {

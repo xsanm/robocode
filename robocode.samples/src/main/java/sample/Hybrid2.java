@@ -24,7 +24,7 @@ import static robocode.util.Utils.normalRelativeAngleDegrees;
 /**
  * DefensiveKamil - hides in corner and fire, moves to another each time energy dropped by 25%
  */
-public class DefensiveKamil2 extends AdvancedRobot {
+public class Hybrid2 extends AdvancedRobot {
     boolean stopWhenSeeRobot = false;
     static int corner = 0;
     int energyTrigger;
